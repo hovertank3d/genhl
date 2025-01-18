@@ -12,8 +12,9 @@ struct format {
 struct format theme[] = {
     // code block background color
     [0]              = {33, 33, 33},
-    
     [TOK_PLAIN]      = {255, 255, 255, 0},
+
+
     [TOK_STRING]     = {220, 150,  28, 1},
     [TOK_CONST]      = {181, 120, 206, 0},
     [TOK_IDENTIFIER] = { 70,  70, 240, 0},

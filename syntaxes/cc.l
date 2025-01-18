@@ -35,13 +35,13 @@ register        "%"{symbol}
 
 %%
 
-[ \t\r]*               {                   return TOK_WHITE; }
-"\n"                    { BEGIN(INITIAL);   return TOK_WHITE;}
+[ \t\r]*                {                   return TOK_WHITE;   }
+"\n"                    { BEGIN(INITIAL);   return TOK_WHITE;   }
 
-"/*"            { BEGIN(C_COMMENT); return TOK_COMMENT; }
-<C_COMMENT>"*/" { BEGIN(INITIAL); return TOK_COMMENT;   }
-<C_COMMENT>\n   { return TOK_COMMENT;                   }
-<C_COMMENT>.    { return TOK_COMMENT;                   }
+"/*"                    { BEGIN(C_COMMENT); return TOK_COMMENT; }
+<C_COMMENT>"*/"         { BEGIN(INITIAL);   return TOK_COMMENT; }
+<C_COMMENT>\n           {                   return TOK_COMMENT; }
+<C_COMMENT>.            {                   return TOK_COMMENT; }
 
 "//".*                  {                   return TOK_COMMENT; }
 
@@ -109,7 +109,7 @@ register        "%"{symbol}
 "##"                    {                       return TOK_PLAIN; }
 "#"{whitespace}{symbol} { BEGIN(inpreproc);     return TOK_PREPROC; }
 
-{symbol}{whitespace}/"("             {          return TOK_CALL;}
+{symbol}{whitespace}/"(" {                      return TOK_CALL;}
 
 {symbol}"_t"            {                       return TOK_SYSTEM; }
 

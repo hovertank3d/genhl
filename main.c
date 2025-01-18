@@ -1,14 +1,50 @@
 #include <stdio.h>
+#include <string.h>
 
 #include "genhighlight.h"
 #include "theme.h"
 
-int yywrap() {
-    return 1;
+int ccwrap() { return 1; }
+int asmattwrap() { return 1; }
+
+extern char *asmatttext;
+extern char *cctext;
+extern int asmattlex(void);
+extern int cclex(void);
+
+enum language {
+    LANG_C,
+    LANG_ASM_ATT,
+};
+
+const char *yytext(enum language l) {
+    switch (l)
+    {
+    case LANG_C:        return cctext;
+    case LANG_ASM_ATT:  return asmatttext;
+    default:            return 0;
+    }
 }
 
-int main() {
-    enum token tok;
+int main(int argc, char **argv) {
+    enum token    tok;
+    enum language lang = LANG_C;
+
+    if (argc > 1) {
+        if (!strcmp(argv[1], "c")) {
+            lang = LANG_C;
+        } else if (!strcmp(argv[1], "asmatt")) {
+            lang = LANG_ASM_ATT;
+        }
+    }
+
+    int (*yylex)(void);
+    switch (lang)
+    {
+    case LANG_C:        yylex = cclex; break;
+    case LANG_ASM_ATT:  yylex = asmattlex; break;
+    default:            yylex = 0; break;
+    }
 
     printf("<style>");
     for (int i = 0; i < TOKS_END; i++) {
@@ -23,9 +59,8 @@ int main() {
     printf("</style>");
 
     printf("<div class=\"stx0\"><pre><code>");
-    extern char *yytext;
     while((tok = yylex()) ) {
-        printf("<code class=\"stx%x\">%s</code>", tok, yytext);
+        printf("<code class=\"stx%x\">%s</code>", tok, yytext(lang));
     } 
     printf("</code></pre></div>");
 }

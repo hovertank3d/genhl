@@ -1,4 +1,5 @@
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 
 #include "genhighlight.h"
@@ -17,12 +18,31 @@ enum language {
     LANG_ASM_ATT,
 };
 
-const char *yytext(enum language l) {
+char *yytext(enum language l) {
     switch (l)
     {
     case LANG_C:        return cctext;
     case LANG_ASM_ATT:  return asmatttext;
     default:            return 0;
+    }
+}
+
+const char *print_escape(FILE *file, char *str) {
+    while (*str) {
+        switch (*str)
+        {
+        case '<':
+            fprintf(file, "&lt;");
+            break;
+        case '>':
+            fprintf(file, "&gt;");
+            break;
+        default:
+            fputc(*str, file);
+            break;
+        }
+
+        str++;
     }
 }
 
@@ -59,8 +79,16 @@ int main(int argc, char **argv) {
     printf("</style>");
 
     printf("<div class=\"stx0\"><pre><code>");
-    while((tok = yylex()) ) {
-        printf("<code class=\"stx%x\">%s</code>", tok, yytext(lang));
+    
+    while((tok = yylex())) {
+        if (tok == TOK_WHITE) {
+            printf(yytext(lang));
+            continue;
+        }
+        printf("<code class=\"stx%x\">", tok);
+        print_escape(stdout, yytext(lang));
+        printf("</code>");
     } 
+
     printf("</code></pre></div>");
 }

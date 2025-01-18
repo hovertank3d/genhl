@@ -14,6 +14,7 @@ enum token {
     TOK_PREPROC,
     TOK_LABEL,
     TOK_COMMENT,
+    TOK_WHITE,
 
     TOKS_END,
 };

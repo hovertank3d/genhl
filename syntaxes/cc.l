@@ -5,7 +5,6 @@ eol             "\n""\r"?
 
 whitespace      [\t\s]*
 
-c_comment     "/*".*"*/"
 cpp_comment  "//".*{eol}
 comment       {c_comment}|{cpp_comment}
 
@@ -21,14 +20,14 @@ number_hex      "0"[xX][0-9a-fA-F]*
 symbol          {symbol_start}{symbol_cont}*
 character       "'"([^\\']|"\\".)"'"
 string          "\""([^\\"]|"\\".)*"\""
-incstring       "<"([^\\"]|"\\".)*">"
+incstring       "<"([^>]|"\\".)*">"
 number          ({number_hex_suf}|{number_hex}|{number_dec}|{number_octal}|{number_binary})
 directive       "."{symbol}
 label           {symbol}":"
 register        "%"{symbol}
 
-%s instr_start
-%s dir
+%s inpreproc
+%x C_COMMENT
 
 %{
 #include "genhighlight.h"
@@ -36,7 +35,17 @@ register        "%"{symbol}
 
 %%
 
-{comment}               {                       return TOK_COMMENT; }
+[ \t\r]*               {                   return TOK_WHITE; }
+"\n"                    { BEGIN(INITIAL);   return TOK_WHITE;}
+
+"/*"            { BEGIN(C_COMMENT); return TOK_COMMENT; }
+<C_COMMENT>"*/" { BEGIN(INITIAL); return TOK_COMMENT;   }
+<C_COMMENT>\n   { return TOK_COMMENT;                   }
+<C_COMMENT>.    { return TOK_COMMENT;                   }
+
+"//".*                  {                   return TOK_COMMENT; }
+
+
 
 "alignas"               {                       return TOK_LABEL;       }
 "alignof"               {                       return TOK_LABEL;       }
@@ -97,17 +106,18 @@ register        "%"{symbol}
 "_Static_assert"        {                       return TOK_LABEL; }
 "_Thread_local"         {                       return TOK_LABEL; }
 
-"#"{symbol}+            {                       return TOK_PREPROC; }
+"##"                    {                       return TOK_PLAIN; }
+"#"{whitespace}{symbol} { BEGIN(inpreproc);     return TOK_PREPROC; }
 
 {symbol}{whitespace}/"("             {          return TOK_CALL;}
 
 {symbol}"_t"            {                       return TOK_SYSTEM; }
 
 {string}|{character}    {                       return TOK_STRING;}
-{incstring}             {                       return TOK_STRING;}
+<inpreproc>{incstring}  {                       return TOK_STRING;}
 {symbol}                {                       return TOK_IDENTIFIER;}
 
-"$"?{number}            {                       return TOK_CONST;       }
+{number}                {                       return TOK_CONST;       }
 
 .                       {                       return TOK_PLAIN;       }
 <<EOF>>                 {                       return TOK_EOF;         }
